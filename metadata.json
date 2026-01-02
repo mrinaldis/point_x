@@ -1,0 +1,7 @@
+{
+  "name": "PontoX - Radar de Grupo",
+  "description": "Aplicativo de radar privado para grupos se encontrarem.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
