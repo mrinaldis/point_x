@@ -12,9 +12,9 @@ interface RadarProps {
 }
 
 const Radar: React.FC<RadarProps> = ({ meetingPoint, members, currentUser, viewMode, onMemberClick }) => {
-  const radarSize = 320;
+  const radarSize = 300;
   const center = radarSize / 2;
-  const maxDistance = 1.0; // LIMITE DE 1 MILHA
+  const maxDistance = 1.0; // LIMITE DE 1 MILHA (APROX. 1.6KM)
 
   const nearbyMembers = useMemo(() => {
     return members.filter(m => {
@@ -25,7 +25,7 @@ const Radar: React.FC<RadarProps> = ({ meetingPoint, members, currentUser, viewM
         m.location.latitude,
         m.location.longitude
       );
-      return dist <= maxDistance; // SÓ APARECE SE ESTIVER A MENOS DE 1 MILHA
+      return dist <= maxDistance; 
     });
   }, [members, meetingPoint]);
 
@@ -41,6 +41,7 @@ const Radar: React.FC<RadarProps> = ({ meetingPoint, members, currentUser, viewM
     const dist = calculateDistance(lat1, lon1, lat2, lon2);
     const angle = Math.atan2(dLon, dLat);
     
+    // Escala para caber no círculo do radar
     const r = (dist / maxDistance) * (radarSize / 2);
     const x = center + r * Math.sin(angle);
     const y = center - r * Math.cos(angle);
@@ -49,44 +50,67 @@ const Radar: React.FC<RadarProps> = ({ meetingPoint, members, currentUser, viewM
   };
 
   return (
-    <div className="relative p-4">
-      <div className="relative rounded-full border-2 border-indigo-500/20 bg-slate-900/50 overflow-hidden shadow-2xl" style={{ width: radarSize, height: radarSize }}>
-        {/* Radar Rings */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-3/4 h-3/4 rounded-full border border-indigo-500/5"></div>
-          <div className="w-1/2 h-1/2 rounded-full border border-indigo-500/10"></div>
-          <div className="w-1/4 h-1/4 rounded-full border border-indigo-500/15"></div>
-          <div className="absolute inset-0 animate-[spin_10s_linear_infinite] bg-[conic-gradient(from_0deg,transparent_0deg,transparent_340deg,rgba(99,102,241,0.1)_360deg)]"></div>
+    <div className="flex flex-col items-center">
+      <div className="relative group">
+        {/* Background Glow */}
+        <div className="absolute -inset-4 bg-indigo-500/10 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+        
+        <div className="relative rounded-full border-2 border-indigo-500/20 bg-slate-900/40 backdrop-blur-sm overflow-hidden shadow-[0_0_50px_-12px_rgba(79,70,229,0.3)]" style={{ width: radarSize, height: radarSize }}>
+          
+          {/* Círculo da Milha de Segurança */}
+          <div className="absolute inset-0 border border-indigo-500/10 rounded-full radar-pulse"></div>
+          
+          {/* Linhas de Grade */}
+          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-indigo-500/5"></div>
+          <div className="absolute left-1/2 top-0 h-full w-[1px] bg-indigo-500/5"></div>
+
+          {/* Anéis Internos */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-2/3 h-2/3 rounded-full border border-indigo-500/5"></div>
+            <div className="w-1/3 h-1/3 rounded-full border border-indigo-500/10"></div>
+          </div>
+
+          {/* Ponto Central (O Encontro) */}
+          <div className="absolute z-20 w-10 h-10 bg-indigo-600 rounded-full border-4 border-slate-900 flex items-center justify-center shadow-xl transform -translate-x-1/2 -translate-y-1/2" style={{ top: '50%', left: '50%' }}>
+            <i className="fas fa-location-dot text-white text-xs"></i>
+          </div>
+
+          {/* Membros no Radar */}
+          {nearbyMembers.map((member) => {
+            if (!member.location) return null;
+            const { x, y } = getPosition(member.location);
+            const dist = calculateDistance(meetingPoint.coordinates.latitude, meetingPoint.coordinates.longitude, member.location.latitude, member.location.longitude);
+            const isArrived = dist < 0.03; // Menos de 50 metros
+
+            return (
+              <button 
+                key={member.id} 
+                onClick={() => onMemberClick(member)}
+                className="absolute z-30 transition-all duration-700 hover:scale-125 focus:outline-none"
+                style={{ top: y - 16, left: x - 16 }}
+              >
+                <div className="relative">
+                  <img src={member.avatar} className={`w-8 h-8 rounded-full border-2 shadow-lg ${isArrived ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-indigo-400 ring-2 ring-indigo-400/20'}`} alt={member.name} />
+                  {isArrived && (
+                    <div className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-full w-3 h-3 border-2 border-slate-900 flex items-center justify-center">
+                      <i className="fas fa-check text-[5px] text-white"></i>
+                    </div>
+                  )}
+                </div>
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/80 px-1.5 py-0.5 rounded text-[7px] font-black whitespace-nowrap border border-slate-800 uppercase tracking-tighter">
+                  {member.name.split(' ')[0]}
+                </div>
+              </button>
+            );
+          })}
         </div>
-
-        {/* Center Point */}
-        <div className="absolute z-20 w-8 h-8 bg-rose-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg" style={{ top: center - 16, left: center - 16 }}>
-          <i className="fas fa-location-dot text-[10px] text-white"></i>
-        </div>
-
-        {/* Users */}
-        {nearbyMembers.map((member) => {
-          if (!member.location) return null;
-          const { x, y } = getPosition(member.location);
-          const dist = calculateDistance(meetingPoint.coordinates.latitude, meetingPoint.coordinates.longitude, member.location.latitude, member.location.longitude);
-          const isArrived = dist < 0.05;
-
-          return (
-            <button 
-              key={member.id} 
-              onClick={() => onMemberClick(member)}
-              className="absolute z-30 transition-all duration-1000 transform hover:scale-125"
-              style={{ top: y - 14, left: x - 14 }}
-            >
-              <img src={member.avatar} className={`w-7 h-7 rounded-full border-2 ${isArrived ? 'border-emerald-500' : 'border-indigo-400'}`} alt={member.name} />
-              <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-slate-900 ${isArrived ? 'bg-emerald-500' : 'bg-indigo-400'}`}></div>
-            </button>
-          );
-        })}
       </div>
-      <div className="mt-6 flex justify-center gap-6 text-[8px] font-black uppercase text-slate-500 tracking-tighter">
-        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Ponto</div>
-        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-400"></div> No Radar (&lt;1mi)</div>
+      
+      {/* Legenda */}
+      <div className="mt-12 flex gap-4 text-[9px] font-black uppercase text-slate-500 tracking-widest bg-slate-900/50 px-4 py-2 rounded-full border border-slate-800/50">
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-600"></div> Ponto</div>
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-400"></div> No Radar</div>
+        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Chegou</div>
       </div>
     </div>
   );
