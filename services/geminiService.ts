@@ -2,8 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { User, MeetingPoint, SubsplashEvent } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const getMeetupUpdate = async (
   meetingPoint: MeetingPoint,
   nearbyMembers: User[],
@@ -11,6 +9,7 @@ export const getMeetupUpdate = async (
   eventName?: string
 ): Promise<string> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = `
       Você é um líder da comunidade organizando o evento "${eventName || meetingPoint.title}".
       Status: ${arrivedMembers.length} já estão no local, ${nearbyMembers.length} estão a caminho no radar.
@@ -28,6 +27,7 @@ export const getMeetupUpdate = async (
 
 export const fetchSubsplashEvents = async (communityName: string = "Minha Igreja"): Promise<SubsplashEvent[]> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const prompt = `Gere uma lista JSON de 3 eventos reais que aconteceriam na comunidade "${communityName}" em São Paulo. 
     Inclua títulos, descrições pastorais, datas futuras próximas, nomes de salas/auditórios, endereços e coordenadas lat/lng aproximadas.`;
     
@@ -87,12 +87,12 @@ export const fetchSubsplashEvents = async (communityName: string = "Minha Igreja
 };
 
 export const estimateTravelTime = async (distance: number): Promise<number> => {
-  // Estimativa baseada em tráfego médio de 15 min por milha + buffer de 10 min
   return Math.max(10, Math.round(distance * 15 + 10)); 
 };
 
 export const generateAutoResponse = async (userName: string, userMessage: string): Promise<string> => {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `O usuário "${userName}" recebeu a mensagem: "${userMessage}". Responda de forma curta e amigável como se fosse ele no chat da igreja.`,
