@@ -6,14 +6,20 @@ import { fetchSubsplashEvents } from './services/geminiService';
 import Radar from './components/Radar';
 import ChatOverlay from './components/ChatOverlay';
 
-// Novos avatares 3D muito mais modernos e expressivos
+// Lista expandida com 12 avatares 3D e ilustrados de alta qualidade
 const PRESET_AVATARS = [
   'https://api.dicebear.com/7.x/big-smiles/svg?seed=Felix&backgroundColor=b6e3f4,c0aede,d1d4f9',
   'https://api.dicebear.com/7.x/big-smiles/svg?seed=Aneka&backgroundColor=b6e3f4,c0aede,d1d4f9',
   'https://api.dicebear.com/7.x/big-smiles/svg?seed=Bubba&backgroundColor=b6e3f4,c0aede,d1d4f9',
   'https://api.dicebear.com/7.x/adventurer/svg?seed=Lucky&backgroundColor=b6e3f4,c0aede,d1d4f9',
   'https://api.dicebear.com/7.x/adventurer/svg?seed=Bear&backgroundColor=b6e3f4,c0aede,d1d4f9',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Coco&backgroundColor=b6e3f4,c0aede,d1d4f9'
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Coco&backgroundColor=b6e3f4,c0aede,d1d4f9',
+  'https://api.dicebear.com/7.x/notionists/svg?seed=Jordan&backgroundColor=b6e3f4,c0aede,d1d4f9',
+  'https://api.dicebear.com/7.x/notionists/svg?seed=Taylor&backgroundColor=b6e3f4,c0aede,d1d4f9',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Sassy&backgroundColor=b6e3f4,c0aede,d1d4f9',
+  'https://api.dicebear.com/7.x/lorelei/svg?seed=Bailey&backgroundColor=b6e3f4,c0aede,d1d4f9',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Kim&backgroundColor=b6e3f4,c0aede,d1d4f9',
+  'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=b6e3f4,c0aede,d1d4f9'
 ];
 
 const COLORS = ['indigo', 'emerald', 'rose', 'amber', 'sky', 'violet'];
@@ -92,8 +98,8 @@ const INITIAL_CIRCLES: FriendCircle[] = [
     color: 'indigo', 
     activeMeetingPoint: null, 
     members: [
-      { id: 'f1', name: 'Ricardo', avatar: 'https://api.dicebear.com/7.x/big-smiles/svg?seed=Felix', isNearby: false, status: 'active', location: { latitude: -23.560, longitude: -46.655 } },
-      { id: 'f2', name: 'Júlia', avatar: 'https://api.dicebear.com/7.x/big-smiles/svg?seed=Aneka', isNearby: false, status: 'active', location: { latitude: -23.562, longitude: -46.657 } }
+      { id: 'f1', name: 'Ricardo', avatar: 'https://api.dicebear.com/7.x/big-smiles/svg?seed=Felix&backgroundColor=b6e3f4,c0aede,d1d4f9', isNearby: false, status: 'active', location: { latitude: -23.560, longitude: -46.655 } },
+      { id: 'f2', name: 'Júlia', avatar: 'https://api.dicebear.com/7.x/big-smiles/svg?seed=Aneka&backgroundColor=b6e3f4,c0aede,d1d4f9', isNearby: false, status: 'active', location: { latitude: -23.562, longitude: -46.657 } }
     ] 
   },
 ];
