@@ -29,7 +29,7 @@ const TRANSLATIONS = {
     share: 'Invite',
     radar_off: 'Radar Waiting',
     mark_local_now: 'Activate Radar Here',
-    gps_error: 'GPS disabled. Please enable it to use the radar.',
+    gps_error: 'GPS disabled or search timed out. Please check permissions.',
     community_search: 'Community Name (e.g. Central Church)',
     fetch_events: 'Search Events',
     no_events: 'No events found.',
@@ -42,7 +42,9 @@ const TRANSLATIONS = {
     online: 'Online',
     type_message: 'Type your message...',
     invite_msg: (groupName: string) => `Let's meet at group "${groupName}"? Track who is coming on the PontoX radar!`,
-    you: 'You'
+    you: 'You',
+    reload: 'Reload App',
+    clear_data: 'Reset App Data'
   },
   pt: {
     app_name: 'PontoX',
@@ -58,7 +60,7 @@ const TRANSLATIONS = {
     share: 'Convidar',
     radar_off: 'Radar Aguardando',
     mark_local_now: 'Ativar Radar Aqui',
-    gps_error: 'GPS desativado. Ative para usar o radar.',
+    gps_error: 'GPS desativado ou tempo esgotado. Verifique as permissões.',
     community_search: 'Nome da Comunidade (ex: Igreja Central)',
     fetch_events: 'Buscar Eventos',
     no_events: 'Nenhum evento encontrado.',
@@ -71,7 +73,9 @@ const TRANSLATIONS = {
     online: 'Online',
     type_message: 'Digite sua mensagem...',
     invite_msg: (groupName: string) => `Bora se encontrar no grupo "${groupName}"? Acompanhe quem está chegando pelo radar do PontoX!`,
-    you: 'Você'
+    you: 'Você',
+    reload: 'Recarregar App',
+    clear_data: 'Limpar Tudo'
   }
 };
 
@@ -90,22 +94,24 @@ const INITIAL_CIRCLES: FriendCircle[] = [
 ];
 
 const App: React.FC = () => {
-  const savedCircles = JSON.parse(localStorage.getItem('pontox_circles') || 'null');
-  const savedUser = JSON.parse(localStorage.getItem('pontox_user') || 'null');
-  const savedLang = (localStorage.getItem('pontox_lang') as Language) || 'en'; // English as default
-  
-  const [state, setState] = useState<AppState>({
-    currentUser: savedUser || { id: '1', name: 'You', avatar: PRESET_AVATARS[0], isNearby: false, status: 'active' },
-    circles: savedCircles || INITIAL_CIRCLES,
-    activeCircleId: (savedCircles && savedCircles.length > 0) ? savedCircles[0].id : INITIAL_CIRCLES[0].id,
-    isTracking: false,
-    error: null,
-    selectedUserForChat: null,
-    messages: [],
-    viewMode: 'radar',
-    subsplashEvents: [],
-    archivedEvents: [],
-    language: savedLang,
+  const [state, setState] = useState<AppState>(() => {
+    const savedCircles = JSON.parse(localStorage.getItem('pontox_circles') || 'null');
+    const savedUser = JSON.parse(localStorage.getItem('pontox_user') || 'null');
+    const savedLang = (localStorage.getItem('pontox_lang') as Language) || 'en';
+    
+    return {
+      currentUser: savedUser || { id: '1', name: 'You', avatar: PRESET_AVATARS[0], isNearby: false, status: 'active' },
+      circles: savedCircles || INITIAL_CIRCLES,
+      activeCircleId: (savedCircles && savedCircles.length > 0) ? savedCircles[0].id : INITIAL_CIRCLES[0].id,
+      isTracking: false,
+      error: null,
+      selectedUserForChat: null,
+      messages: [],
+      viewMode: 'radar',
+      subsplashEvents: [],
+      archivedEvents: [],
+      language: savedLang,
+    };
   });
 
   const [activeTab, setActiveTab] = useState<'radar' | 'circles' | 'settings' | 'history'>('circles');
@@ -133,12 +139,33 @@ const App: React.FC = () => {
             error: null 
           }));
         },
-        () => setState(prev => ({ ...prev, error: t.gps_error })),
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+        (err) => {
+          console.error("GPS Error:", err);
+          setState(prev => ({ ...prev, error: t.gps_error }));
+        },
+        { enableHighAccuracy: false, maximumAge: 10000, timeout: 20000 } // Menos agressivo no mobile
       );
       return () => navigator.geolocation.clearWatch(watchId);
     }
   }, [state.language]);
+
+  const handleReload = () => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) registration.unregister();
+        window.location.reload();
+      });
+    } else {
+      window.location.reload();
+    }
+  };
+
+  const handleClearData = () => {
+    if (confirm(state.language === 'en' ? 'Delete all local data?' : 'Apagar todos os dados locais?')) {
+      localStorage.clear();
+      window.location.reload();
+    }
+  };
 
   const handleQuickMark = (customPoint?: MeetingPoint) => {
     const point = customPoint || {
@@ -148,7 +175,7 @@ const App: React.FC = () => {
       date: new Date().toISOString(),
       locationName: state.language === 'en' ? 'Meeting Point' : 'Local de Encontro',
       address: '',
-      coordinates: state.currentUser.location!,
+      coordinates: state.currentUser.location || { latitude: -23.56, longitude: -46.65 },
       radius: 1.0,
       attendance: ['1']
     };
@@ -195,17 +222,25 @@ const App: React.FC = () => {
   };
 
   const deleteCircle = (id: string) => {
-    setState(prev => ({
-      ...prev,
-      circles: prev.circles.filter(c => c.id !== id),
-      activeCircleId: prev.circles.find(c => c.id !== id)?.id || ''
-    }));
+    setState(prev => {
+      const filtered = prev.circles.filter(c => c.id !== id);
+      return {
+        ...prev,
+        circles: filtered,
+        activeCircleId: filtered.length > 0 ? filtered[0].id : ''
+      };
+    });
     setEditingCircle(null);
   };
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans pb-32">
-      {state.error && <div className="fixed top-0 left-0 right-0 z-[200] bg-rose-600 text-[10px] font-black uppercase text-center py-2 shadow-lg">{state.error}</div>}
+      {state.error && (
+        <div className="fixed top-0 left-0 right-0 z-[200] bg-rose-600 text-[10px] font-black uppercase text-center py-2 shadow-lg flex items-center justify-center gap-2">
+          {state.error}
+          <button onClick={() => setState(s => ({ ...s, error: null }))} className="bg-black/20 w-5 h-5 rounded-full">×</button>
+        </div>
+      )}
 
       <header className="p-6 pt-10 flex items-center justify-between">
         <div className="relative">
@@ -334,6 +369,11 @@ const App: React.FC = () => {
                     </button>
                   ))}
                 </div>
+             </div>
+
+             <div className="space-y-4 pt-6">
+                <button onClick={handleReload} className="w-full py-4 bg-slate-900 border border-slate-800 rounded-2xl text-xs font-black uppercase text-indigo-400">{t.reload}</button>
+                <button onClick={handleClearData} className="w-full py-4 bg-rose-600/10 border border-rose-500/20 rounded-2xl text-xs font-black uppercase text-rose-500">{t.clear_data}</button>
              </div>
           </div>
         )}

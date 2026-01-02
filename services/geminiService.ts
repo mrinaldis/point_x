@@ -2,6 +2,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { User, MeetingPoint, SubsplashEvent } from "../types";
 
+const getAiInstance = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+  return new GoogleGenAI({ apiKey });
+};
+
 export const getMeetupUpdate = async (
   meetingPoint: MeetingPoint,
   nearbyMembers: User[],
@@ -9,7 +15,9 @@ export const getMeetupUpdate = async (
   eventName?: string
 ): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = getAiInstance();
+    if (!ai) return "Nos vemos em breve na comunidade!";
+    
     const prompt = `
       Você é um líder da comunidade organizando o evento "${eventName || meetingPoint.title}".
       Status: ${arrivedMembers.length} já estão no local, ${nearbyMembers.length} estão a caminho no radar.
@@ -21,13 +29,15 @@ export const getMeetupUpdate = async (
     });
     return response.text?.trim() || "A alegria do encontro nos espera!";
   } catch (error) {
-    return "Nos vemos em breve na comunidade!";
+    return "Nos vemos em breve!";
   }
 };
 
 export const fetchSubsplashEvents = async (communityName: string = "Minha Igreja"): Promise<SubsplashEvent[]> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = getAiInstance();
+    if (!ai) throw new Error("API Key missing");
+
     const prompt = `Gere uma lista JSON de 3 eventos reais que aconteceriam na comunidade "${communityName}" em São Paulo. 
     Inclua títulos, descrições pastorais, datas futuras próximas, nomes de salas/auditórios, endereços e coordenadas lat/lng aproximadas.`;
     
@@ -69,7 +79,7 @@ export const fetchSubsplashEvents = async (communityName: string = "Minha Igreja
       }));
     }
   } catch (error) {
-    console.error("Erro ao buscar eventos Subsplash:", error);
+    console.error("Erro ao buscar eventos:", error);
   }
 
   return [
@@ -92,7 +102,8 @@ export const estimateTravelTime = async (distance: number): Promise<number> => {
 
 export const generateAutoResponse = async (userName: string, userMessage: string): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = getAiInstance();
+    if (!ai) return "Estou chegando!";
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `O usuário "${userName}" recebeu a mensagem: "${userMessage}". Responda de forma curta e amigável como se fosse ele no chat da igreja.`,
