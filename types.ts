@@ -19,13 +19,14 @@ export interface User {
   distanceFromPoint?: number;
   isNearby: boolean;
   status: 'active' | 'arrived' | 'offline';
+  arrivalTime?: number;
 }
 
 export interface FriendCircle {
   id: string;
   name: string;
   icon: string;
-  color: string; // Ex: 'indigo', 'emerald', 'rose', 'amber', 'sky'
+  color: string;
   members: User[];
   activeMeetingPoint: MeetingPoint | null;
 }
@@ -38,13 +39,12 @@ export interface SubsplashEvent {
   locationName: string;
   address: string;
   coordinates: Coordinates;
-  attendance?: string[];
+  confirmedMembers?: string[]; // IDs dos usuários que confirmaram
 }
 
 export interface MeetingPoint extends SubsplashEvent {
   radius: number;
   isArchived?: boolean;
-  travelTimeMinutes?: number;
 }
 
 export type ViewMode = 'radar' | 'map';

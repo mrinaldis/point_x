@@ -1,13 +1,12 @@
 
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PointX - Radar de Encontros</title>
+    <title>PointX - Meeting Radar</title>
     
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
+    <!-- Meta Tags -->
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +15,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Leaflet para Mapas -->
+    <!-- Leaflet for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -47,6 +46,10 @@
             background: #020617 !important;
             border-radius: 2rem;
         }
+        /* Custom picker style */
+        .picker-target {
+            filter: drop-shadow(0 0 10px rgba(79, 70, 229, 0.4));
+        }
     </style>
 <script type="importmap">
 {
@@ -62,12 +65,5 @@
 <body>
     <div id="root"></div>
     <script type="module" src="index.tsx"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
-            });
-        }
-    </script>
 </body>
 </html>
