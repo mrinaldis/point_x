@@ -28,6 +28,7 @@ const COLORS = ['indigo', 'emerald', 'rose', 'amber', 'sky', 'violet'];
 const TRANSLATIONS = {
   en: {
     app_name: 'PointX',
+    home: 'Home',
     groups: 'Groups',
     radar: 'Radar',
     community: 'Community',
@@ -70,6 +71,7 @@ const TRANSLATIONS = {
   },
   pt: {
     app_name: 'PointX',
+    home: 'Início',
     groups: 'Grupos',
     radar: 'Radar',
     community: 'Comunidade',
@@ -273,6 +275,25 @@ const App: React.FC = () => {
     }
   };
 
+  const shareGroupInvite = async (circle: FriendCircle) => {
+    const data = btoa(JSON.stringify({
+      id: circle.id,
+      name: circle.name,
+      icon: circle.icon,
+      color: circle.color,
+      members: []
+    }));
+    const url = `${window.location.origin}${window.location.pathname}?joinData=${data}`;
+    const message = t.invite_msg(circle.name);
+    
+    if (navigator.share) {
+      try { await navigator.share({ title: 'PointX', text: message, url }); } catch (e) {}
+    } else {
+      navigator.clipboard.writeText(`${message} ${url}`);
+      alert(state.language === 'pt' ? "Link de convite copiado!" : "Invitation link copied!");
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans pb-32">
       {state.error && (
@@ -296,7 +317,7 @@ const App: React.FC = () => {
         {activeTab === 'circles' && (
           <div className="space-y-6 animate-in slide-in-from-bottom-4">
             <div className="flex justify-between items-center px-2">
-              <h2 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.groups}</h2>
+              <h2 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{t.home}</h2>
               <button onClick={() => setEditingCircle({ id: 'c' + Date.now(), name: '', icon: 'fa-users', color: 'indigo', members: [], activeMeetingPoint: null })} className="bg-indigo-600 text-white px-4 py-2 rounded-full text-[10px] font-black uppercase">+ {t.new_group}</button>
             </div>
             <div className="space-y-4">
@@ -307,7 +328,14 @@ const App: React.FC = () => {
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center bg-slate-800 text-${circle.color}-400 shadow-inner`}><i className={`fas ${circle.icon}`}></i></div>
                       <div><h3 className="font-bold">{circle.name}</h3><p className="text-[10px] text-slate-500">{t.members_count(circle.members.length + 1)}</p></div>
                     </button>
-                    <button onClick={() => setEditingCircle(circle)} className="p-2 text-slate-600"><i className="fas fa-edit text-sm"></i></button>
+                    <div className="flex gap-1">
+                      <button onClick={() => shareGroupInvite(circle)} className="p-2.5 bg-slate-800/50 rounded-xl text-indigo-400 hover:text-white transition-colors" title={t.share}>
+                        <i className="fas fa-user-plus text-sm"></i>
+                      </button>
+                      <button onClick={() => setEditingCircle(circle)} className="p-2.5 bg-slate-800/50 rounded-xl text-slate-500 hover:text-white transition-colors">
+                        <i className="fas fa-edit text-sm"></i>
+                      </button>
+                    </div>
                   </div>
                   {state.activeCircleId === circle.id && (
                     <button onClick={() => { setIsCreatingEvent(true); setNewEvent({ title: '', date: '', location: null }); }} className="w-full py-3.5 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-[11px] font-black uppercase text-indigo-400 hover:bg-indigo-600/30 transition-all flex items-center justify-center gap-2">
@@ -406,7 +434,7 @@ const App: React.FC = () => {
       <nav className="fixed bottom-6 left-6 right-6 z-[300] max-w-md mx-auto">
         <div className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 p-2.5 rounded-[36px] flex justify-around shadow-2xl">
           {[
-            { id: 'circles', icon: 'fa-layer-group', label: t.groups },
+            { id: 'circles', icon: 'fa-house', label: t.home },
             { id: 'radar', icon: 'fa-bullseye', label: t.radar },
             { id: 'history', icon: 'fa-users-between-lines', label: t.community }
           ].map(tab => (
