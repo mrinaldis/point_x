@@ -1,11 +1,45 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { User, MeetingPoint, SubsplashEvent } from "../types";
+import { User, MeetingPoint, SubsplashEvent, Coordinates } from "../types";
 
 const getAiInstance = () => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) return null;
   return new GoogleGenAI({ apiKey });
+};
+
+/**
+ * Usa o Gemini para transformar uma busca de texto em coordenadas reais (Lat/Lng)
+ */
+export const resolveLocation = async (query: string): Promise<Coordinates | null> => {
+  try {
+    const ai = getAiInstance();
+    if (!ai) return null;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Encontre as coordenadas geográficas (latitude e longitude) para o seguinte local: "${query}". Responda apenas o JSON.`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            latitude: { type: Type.NUMBER },
+            longitude: { type: Type.NUMBER },
+            address: { type: Type.STRING }
+          },
+          required: ["latitude", "longitude"]
+        }
+      }
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text.trim());
+    }
+  } catch (error) {
+    console.error("Erro ao resolver localização:", error);
+  }
+  return null;
 };
 
 export const getMeetupUpdate = async (
@@ -19,9 +53,9 @@ export const getMeetupUpdate = async (
     if (!ai) return "Nos vemos em breve na comunidade!";
     
     const prompt = `
-      Você é um líder da comunidade organizando o evento "${eventName || meetingPoint.title}".
+      Você é um líder da comunidade PointX organizando o evento "${eventName || meetingPoint.title}".
       Status: ${arrivedMembers.length} já estão no local, ${nearbyMembers.length} estão a caminho no radar.
-      Escreva uma mensagem de encorajamento para quem ainda não saiu. Máximo 2 frases curtas.
+      Escreva uma mensagem de encorajamento curta.
     `;
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -39,7 +73,7 @@ export const fetchSubsplashEvents = async (communityName: string = "Minha Igreja
     if (!ai) throw new Error("API Key missing");
 
     const prompt = `Gere uma lista JSON de 3 eventos reais que aconteceriam na comunidade "${communityName}" em São Paulo. 
-    Inclua títulos, descrições pastorais, datas futuras próximas, nomes de salas/auditórios, endereços e coordenadas lat/lng aproximadas.`;
+    Inclua títulos, descrições, datas, endereços e coordenadas lat/lng aproximadas.`;
     
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -82,32 +116,5 @@ export const fetchSubsplashEvents = async (communityName: string = "Minha Igreja
     console.error("Erro ao buscar eventos:", error);
   }
 
-  return [
-    {
-      id: 'default-1',
-      title: 'Culto de Celebração',
-      description: 'Celebração principal da nossa comunidade.',
-      date: new Date(Date.now() + 3600000 * 4).toISOString(),
-      locationName: 'Nave Principal',
-      address: 'Av. Paulista, 1000',
-      coordinates: { latitude: -23.5614, longitude: -46.6559 },
-      attendance: []
-    }
-  ];
-};
-
-export const estimateTravelTime = async (distance: number): Promise<number> => {
-  return Math.max(10, Math.round(distance * 15 + 10)); 
-};
-
-export const generateAutoResponse = async (userName: string, userMessage: string): Promise<string> => {
-  try {
-    const ai = getAiInstance();
-    if (!ai) return "Estou chegando!";
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `O usuário "${userName}" recebeu a mensagem: "${userMessage}". Responda de forma curta e amigável como se fosse ele no chat da igreja.`,
-    });
-    return response.text?.trim() || "Estou chegando!";
-  } catch { return "Pode deixar!"; }
+  return [];
 };

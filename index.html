@@ -4,17 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PontoX - Radar de Encontros</title>
+    <title>PointX - Radar de Encontros</title>
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="PontoX">
+    <meta name="apple-mobile-web-app-title" content="PointX">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Leaflet para Mapas -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         @keyframes pulse-custom {
             0% { transform: scale(0.95); opacity: 0.5; }
@@ -37,8 +42,11 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
-        /* Esconder scrollbar */
         #root::-webkit-scrollbar { display: none; }
+        .leaflet-container {
+            background: #020617 !important;
+            border-radius: 2rem;
+        }
     </style>
 <script type="importmap">
 {
@@ -53,12 +61,10 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Importação automática do módulo principal -->
     <script type="module" src="index.tsx"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Usando caminho relativo para funcionar em qualquer subdomínio/link
                 navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
             });
         }
