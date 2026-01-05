@@ -23,8 +23,6 @@ const PRESET_AVATARS = [
   'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=b6e3f4,c0aede,d1d4f9'
 ];
 
-const COLORS = ['indigo', 'emerald', 'rose', 'amber', 'sky', 'violet'];
-
 const TRANSLATIONS = {
   en: {
     app_name: 'PointX',
@@ -45,6 +43,7 @@ const TRANSLATIONS = {
     mark_custom_place: 'Search Place',
     pick_on_map: 'Pick on Map',
     create_event: 'Schedule Event',
+    start_event: 'Start Event',
     event_title: 'Event Title',
     event_datetime: 'Date and Time',
     gps_error: 'GPS disabled. Please enable to use the radar.',
@@ -88,6 +87,7 @@ const TRANSLATIONS = {
     mark_custom_place: 'Buscar Lugar',
     pick_on_map: 'Escolher no Mapa',
     create_event: 'Agendar Evento',
+    start_event: 'Iniciar Evento',
     event_title: 'Título do Evento',
     event_datetime: 'Data e Hora',
     gps_error: 'GPS desativado. Ative para usar o radar.',
@@ -309,7 +309,7 @@ const App: React.FC = () => {
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">{activeCircle.name}</p>
         </div>
         <button onClick={() => setActiveTab('settings')} className="w-12 h-12 rounded-2xl border-2 border-slate-800 flex items-center justify-center bg-slate-900 overflow-hidden shadow-lg">
-          <img src={state.currentUser.avatar} className="w-full h-full p-1" alt="" />
+          <img src={state.currentUser.avatar} className="w-full h-full p-1" alt="Profile" />
         </button>
       </header>
 
@@ -338,9 +338,14 @@ const App: React.FC = () => {
                     </div>
                   </div>
                   {state.activeCircleId === circle.id && (
-                    <button onClick={() => { setIsCreatingEvent(true); setNewEvent({ title: '', date: '', location: null }); }} className="w-full py-3.5 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-[11px] font-black uppercase text-indigo-400 hover:bg-indigo-600/30 transition-all flex items-center justify-center gap-2">
-                      <i className="fas fa-calendar-plus"></i> {t.create_event}
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                        <button onClick={() => { setIsCreatingEvent(true); setNewEvent({ title: '', date: '', location: null }); }} className="py-3 bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-[10px] font-black uppercase text-indigo-400 hover:bg-indigo-600/30 transition-all flex items-center justify-center gap-2">
+                          <i className="fas fa-calendar-plus"></i> {t.create_event}
+                        </button>
+                        <button onClick={() => { setState(s => ({ ...s, activeCircleId: circle.id })); setIsPickingOnMap(true); }} className="py-3 bg-emerald-600/20 border border-emerald-500/30 rounded-xl text-[10px] font-black uppercase text-emerald-400 hover:bg-emerald-600/30 transition-all flex items-center justify-center gap-2">
+                          <i className="fas fa-play"></i> {t.start_event}
+                        </button>
+                    </div>
                   )}
                 </div>
               ))}
@@ -426,7 +431,9 @@ const App: React.FC = () => {
                    <button onClick={() => setState(s => ({ ...s, language: 'pt' }))} className={`flex-1 py-4 rounded-2xl font-black text-xs border-2 ${state.language === 'pt' ? 'bg-indigo-600 border-indigo-400' : 'bg-slate-900 border-slate-800'}`}>PORTUGUÊS</button>
                 </div>
              </div>
-             <button onClick={() => { localStorage.clear(); window.location.reload(); }} className="w-full py-4 text-rose-500 text-xs font-black uppercase border-2 border-rose-500/20 rounded-2xl">Reset App Data</button>
+             <button onClick={() => setActiveTab('circles')} className="w-full py-4 text-indigo-400 text-xs font-black uppercase border-2 border-indigo-500/20 rounded-2xl flex items-center justify-center gap-2">
+                <i className="fas fa-home"></i> {t.home}
+             </button>
           </div>
         )}
       </main>
